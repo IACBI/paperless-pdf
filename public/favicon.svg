@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="paperless-pdf">
+  <rect width="64" height="64" rx="14" fill="#0f766e" />
+  <g fill="none" stroke="#f0fdfa" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 14h16l9 9v28a2 2 0 0 1-2 2H21a2 2 0 0 1-2-2V16a2 2 0 0 1 2-2z" />
+    <path d="M37 14v10h9" />
+  </g>
+  <circle cx="44" cy="44" r="9" fill="#14b8a6" stroke="#f0fdfa" stroke-width="2.5" />
+  <path d="M40 44l3 3 5-6" fill="none" stroke="#f0fdfa" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+</svg>
