@@ -1,75 +1,82 @@
-<div align="center">
-
-<img src="public/icon.svg" alt="paperless-pdf" width="104" height="104" />
+<a id="top"></a>
 
 # paperless-pdf
 
-### A fully client-side, privacy-first PDF toolkit
-**No file ever leaves your browser.**
+A fully client-side, privacy-first PDF toolkit.
 
-[![CI](https://github.com/IACBI/paperless-pdf/actions/workflows/ci.yml/badge.svg)](https://github.com/IACBI/paperless-pdf/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![PWA](https://img.shields.io/badge/PWA-offline%20ready-5A0FC8.svg)](#-offline--pwa)
-[![Privacy](https://img.shields.io/badge/privacy-100%25%20local-0f766e.svg)](#-the-privacy-promise)
-[![Made with React + Vite](https://img.shields.io/badge/React%20%2B%20Vite%20%2B%20TS-0d9488.svg)](#-tech-stack)
+[![CI](https://github.com/IACBI/paperless-pdf/actions/workflows/ci.yml/badge.svg)](https://github.com/IACBI/paperless-pdf/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE) [![Live demo](https://img.shields.io/badge/live%20demo-iacbi.github.io-0f766e.svg)](https://iacbi.github.io/paperless-pdf/)
 
-**🌐 [Live demo](https://iacbi.github.io/paperless-pdf/)** &nbsp;·&nbsp; **English** | [Türkçe](#-türkçe)
-
-</div>
+**Read this in:** [English](#english) · [Türkçe](#turkce)
 
 ---
 
-Merge, split, compress, convert, rotate and OCR your PDFs **entirely on your device**.
-Every operation runs in the browser with JavaScript and WebAssembly — there is no backend,
-no upload, and no analytics. It's a Progressive Web App, so once loaded it keeps working
-**offline**.
+<a id="english"></a>
 
-## ✨ Features
+## English
 
-| Tool | What it does |
-| --- | --- |
-| 🧩 **Merge** | Combine multiple PDFs and **drag to reorder** or delete individual pages |
-| ✂️ **Split** | Extract page ranges (`1-3, 5, 8-`) into one PDF or a ZIP of separate files |
-| 🗜️ **Compress** | Shrink size by re-rendering pages as images, with DPI & quality sliders |
-| 🖼️ **Images → PDF** | Turn JPG/PNG images into a PDF (reorderable, fit / A4 / Letter layouts) |
-| 🌄 **PDF → PNG** | Export pages as PNG images at your chosen resolution (single file or ZIP) |
-| 🔄 **Rotate** | Rotate any or all pages in 90° steps with a live preview |
-| 🔎 **OCR** | Add an invisible, searchable text layer to scans — **on-device**, fully offline |
+### Overview
 
-## 🔒 The privacy promise
+paperless-pdf merges, splits, compresses, converts, rotates and OCRs PDFs in your browser.
+Every operation runs on your device with JavaScript and WebAssembly. There is no server to
+upload to, and the app includes no analytics.
 
-> **No file ever leaves the browser.** All processing is local. No backend, no uploads, no
-> analytics, no third-party requests carrying your data.
+Try the live version at **[iacbi.github.io/paperless-pdf](https://iacbi.github.io/paperless-pdf/)**.
 
-This isn't just a claim — it's enforced in code:
+#### Privacy
 
-- ❌ No `fetch` / XHR / WebSocket / beacon ever carries your files, page images, or text.
-- ❌ No analytics or telemetry SDKs of any kind.
-- ✅ All engines (`pdf-lib`, `pdf.js`, `tesseract.js`) run in-browser.
-- ✅ OCR's WebAssembly core **and** language data are **self-hosted** — so even OCR makes
-  zero third-party requests and works completely offline.
-- ✅ Results reach you only through a local download.
-- ✅ Size limits protect your device: files over 200 MB or 1,000 pages (and merges over
-  500 MB or 2,000 pages in total) are refused, and so is any page too large to render.
-  You get a message instead of a frozen tab.
+No file ever leaves your device. PDFs, page images and extracted text are processed in
+memory, and the result comes back to you as a local download. In practice:
 
-See [`CLAUDE.md`](./CLAUDE.md) for the full architecture and the rules that protect this
-invariant.
+- Nothing sends your files, page images or text over the network.
+- There are no analytics, telemetry or third-party SDKs.
+- The PDF engines (pdf-lib, pdf.js) and the OCR engine (tesseract.js) run in the browser.
+  The OCR WebAssembly core and language data are served from the app's own origin, so OCR
+  works offline and makes no third-party requests.
+- The production build sends a strict Content Security Policy: `connect-src 'self'`,
+  `script-src 'self' 'wasm-unsafe-eval'` and `object-src 'none'`. Scripts, workers and data
+  load only from the app's own origin.
+- Size limits protect your device from huge or hostile files. Inputs over 200 MB or 1,000
+  pages are refused. A merge session is capped at 500 MB and 2,000 pages in total. Images
+  over 50 MB or 40 million pixels are refused, and so is any page too large to render. Each
+  tool shows a message instead of freezing the tab.
 
-## 🧱 Tech stack
+Built with React, Vite, TypeScript, Tailwind CSS, pdf-lib, pdf.js, tesseract.js and dnd-kit.
 
-[React](https://react.dev) · [Vite](https://vite.dev) · [TypeScript](https://www.typescriptlang.org)
-· [Tailwind CSS v4](https://tailwindcss.com) ·
-[pdf-lib](https://pdf-lib.js.org) (manipulation) ·
-[pdf.js](https://mozilla.github.io/pdf.js/) (rendering) ·
-[tesseract.js](https://tesseract.projectnaptha.com) (OCR) ·
-[@dnd-kit](https://dndkit.com) (drag & drop) ·
-[vite-plugin-pwa](https://vite-pwa-org.netlify.app) (offline) ·
-[Vitest](https://vitest.dev) + [Playwright](https://playwright.dev) (tests).
+[⬆ Back to top](#top)
 
-## 🚀 Getting started
+---
 
-Requires **Node 18+** (developed on Node 24).
+### Features
+
+| Tool             | What it does                                                                                                                                  |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Merge**        | Combine several PDFs. Drag pages to reorder them, or delete individual pages.                                                                 |
+| **Split**        | Extract page ranges such as `1-3, 5, 8-` into one PDF, or into a ZIP of separate files.                                                       |
+| **Compress**     | Shrink a file by re-rendering its pages as images, with DPI and quality controls. Pages become images, so their text is no longer selectable. |
+| **Images → PDF** | Turn JPG and PNG images into one PDF. Drag to set the order, and choose fit-to-image, A4 or Letter layout.                                    |
+| **PDF → PNG**    | Export pages as PNG at the resolution you choose, as one file or a ZIP.                                                                       |
+| **Rotate**       | Rotate any or all pages in 90° steps, with page thumbnails that update as you rotate.                                                         |
+| **OCR**          | Add an invisible, searchable text layer to scanned pages. Runs on your device and works offline.                                              |
+
+paperless-pdf is a Progressive Web App. After the first load, a service worker caches the app,
+the OCR engine and the language data, so every tool works offline. You can install it from
+the browser's install prompt.
+
+[⬆ Back to top](#top)
+
+---
+
+### Requirements
+
+- Node.js 20 or newer, and npm. CI and the deploy workflow run on Node 20; the project is
+  developed on Node 24.
+- A modern browser with WebAssembly and Web Worker support.
+
+[⬆ Back to top](#top)
+
+---
+
+### Installation
 
 ```bash
 git clone https://github.com/IACBI/paperless-pdf.git
@@ -78,161 +85,168 @@ npm install      # also vendors the OCR assets (postinstall)
 npm run dev      # http://localhost:5173
 ```
 
-## 📜 Scripts
+`npm install` runs a postinstall script. It copies the OCR worker and WebAssembly core from
+`node_modules` into `public/`, and downloads the English language data. The download is
+checked against a pinned SHA-256 digest. If it fails on your machine, the install still
+completes with a warning, and OCR stays unavailable until you run `npm run vendor:ocr`. In CI
+the same failure fails the job.
 
-| Command | What it does |
-| --- | --- |
-| `npm run dev` | Start the Vite dev server |
-| `npm run build` | Type-check and build to `dist/` |
-| `npm run preview` | Preview the production build locally |
-| `npm test` | Run unit tests (Vitest) |
-| `npm run test:e2e` | Run end-to-end smoke tests (Playwright) |
-| `npm run lint` | Lint with ESLint |
-| `npm run format` | Format with Prettier |
-| `npm run vendor:ocr` | (Re)vendor the self-hosted OCR assets |
+The vendored files in `public/tesseract/` and `public/tessdata/` are git-ignored.
 
-## 🧪 Testing
-
-- **Unit tests (Vitest):** the pure PDF logic in `src/lib/` — merge, split, rotate and
-  images→PDF — verified with in-memory PDFs (no fixtures, no network).
-- **End-to-end (Playwright):** real-browser smoke tests covering the privacy banner, a
-  merge round-trip, an **OCR round-trip** that confirms the output PDF actually
-  contains selectable text, and refusals for over-limit input.
-
-```bash
-npm test          # unit
-npm run test:e2e  # browser e2e (builds, serves, drives Chromium)
-```
-
-## 📲 Offline / PWA
-
-paperless-pdf is a Progressive Web App. After the first load, a service worker precaches the
-app shell **and** the OCR engine + language data, so every tool — including OCR — works fully
-offline. Install it to your home screen or desktop from the browser's install prompt.
-
-## 🔤 OCR assets
-
-OCR runs on self-hosted Tesseract assets (worker, WASM core, language data) under `public/`.
-They are **not committed**; they are vendored automatically on `postinstall`, or manually:
-
-```bash
-npm run vendor:ocr
-```
-
-This copies the worker/core from `node_modules` and downloads `eng.traineddata.gz` into
-`public/tessdata/`. To add a language, add its code to `LANGS` in
-[`scripts/vendor-tesseract.mjs`](./scripts/vendor-tesseract.mjs) and to `OCR_LANGUAGES` in
-[`src/lib/ocrLanguages.ts`](./src/lib/ocrLanguages.ts), then re-run the script. (The network
-is only used to *download* the open-source language model to your machine — your documents
-are never uploaded.)
-
-## 🌍 Deploy to GitHub Pages
-
-The app uses a relative base (`base: './'`) and `HashRouter`, so it runs correctly under a
-project subpath like `https://iacbi.github.io/paperless-pdf/` with no extra config.
-
-**Recommended — GitHub Actions (automatic):**
-
-1. Push this repo to GitHub with the default branch named `main`.
-2. In **Settings → Pages**, set **Source** to **GitHub Actions**.
-3. Push to `main`. The workflow [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml)
-   runs `npm ci` (which vendors the OCR assets), `npm test`, `npm run build`, and publishes `dist/`.
-
-**Manual alternative:**
-
-```bash
-npm run vendor:ocr   # ensure OCR assets are present
-npm run build        # outputs to dist/
-npx gh-pages -d dist # publish dist/ to the gh-pages branch
-```
-
-## 🗂️ Project structure
-
-```
-src/
-  lib/          Pure, framework-free PDF logic (unit-tested)
-  components/   Reusable UI (dropzone, page grid, progress, privacy banner…)
-  tools/        registry + one view per tool
-  pages/        Home and routed tool pages
-public/
-  tesseract/    Self-hosted OCR worker + WASM core   (vendored)
-  tessdata/     Language data, e.g. eng.traineddata  (vendored)
-tests/e2e/      Playwright smoke tests
-```
-
-## 🤝 Contributing
-
-Issues and pull requests are welcome. Before opening a PR, please run `npm run lint` and
-`npm test`. Keep the **privacy invariant** intact — no feature may send user data anywhere.
-
-## 📄 License
-
-[MIT](./LICENSE) © 𝓐.𝓒.𝓑
-
-<br />
+[⬆ Back to top](#top)
 
 ---
 
-<div align="center">
+### Usage
 
-# 🇹🇷 Türkçe
+| Command              | What it does                                           |
+| -------------------- | ------------------------------------------------------ |
+| `npm run dev`        | Start the Vite dev server                              |
+| `npm run build`      | Type-check and build to `dist/`                        |
+| `npm run preview`    | Serve the production build locally                     |
+| `npm test`           | Run unit tests (Vitest)                                |
+| `npm run test:e2e`   | Build, serve and run the end-to-end tests (Playwright) |
+| `npm run lint`       | Lint with ESLint                                       |
+| `npm run format`     | Format the repository with Prettier                    |
+| `npm run vendor:ocr` | Re-vendor the OCR assets                               |
 
-### Tamamen tarayıcıda çalışan, gizlilik öncelikli PDF araç seti
-**Hiçbir dosya cihazınızdan dışarı çıkmaz.**
+#### Deploying to GitHub Pages
 
-[English](#paperless-pdf) | **Türkçe**
+The app uses a relative base (`base: './'`) and `HashRouter`, so it works under a project
+subpath such as `https://iacbi.github.io/paperless-pdf/` without extra configuration.
 
-</div>
+1. Push the repository to GitHub with `main` as the default branch.
+2. In **Settings → Pages**, set **Source** to **GitHub Actions**.
+3. Push to `main`. The [deploy workflow](./.github/workflows/deploy.yml) runs `npm ci`,
+   `npm test` and `npm run build`, then publishes `dist/`.
 
-PDF'lerinizi **tamamen kendi cihazınızda** birleştirin, bölün, sıkıştırın, dönüştürün,
-döndürün ve OCR ile aranabilir hale getirin. Her işlem tarayıcıda JavaScript ve WebAssembly
-ile çalışır — sunucu yok, yükleme yok, analitik yok. Bir Progressive Web App (PWA) olduğu
-için ilk açılıştan sonra **çevrimdışı** da çalışır.
+To host elsewhere, run `npm run build` and serve the `dist/` folder from any static host.
 
-## ✨ Özellikler
+[⬆ Back to top](#top)
 
-| Araç | Ne yapar |
-| --- | --- |
-| 🧩 **Birleştir** | Birden çok PDF'i birleştir, **sürükleyerek** sayfaları yeniden sırala veya sil |
-| ✂️ **Böl** | Sayfa aralıklarını (`1-3, 5, 8-`) tek PDF veya ayrı dosyalardan oluşan ZIP olarak çıkar |
-| 🗜️ **Sıkıştır** | Sayfaları görüntü olarak yeniden işleyip DPI & kalite kaydırıcılarıyla boyutu küçült |
-| 🖼️ **Görsel → PDF** | JPG/PNG görselleri PDF'e çevir (sıralanabilir, sığdır / A4 / Letter düzeni) |
-| 🌄 **PDF → PNG** | Sayfaları seçtiğin çözünürlükte PNG olarak dışa aktar (tek dosya veya ZIP) |
-| 🔄 **Döndür** | Sayfaların herhangi birini veya hepsini canlı önizlemeyle 90°'lik adımlarla döndür |
-| 🔎 **OCR** | Taramalara görünmez, aranabilir bir metin katmanı ekle — **cihazda**, tamamen çevrimdışı |
+---
 
-## 🔒 Gizlilik sözü
+### Configuration
 
-> **Hiçbir dosya tarayıcıdan dışarı çıkmaz.** Tüm işlemler yereldir. Sunucu yok, yükleme
-> yok, analitik yok, verinizi taşıyan üçüncü taraf istekleri yok.
+Only English OCR is included by default. To add a language:
 
-Bu yalnızca bir iddia değil, kodla güvence altına alınmıştır:
+1. Add its Tesseract code to `LANGS` in
+   [`scripts/vendor-tesseract.mjs`](./scripts/vendor-tesseract.mjs), and pin the SHA-256
+   digest of its `.traineddata.gz` in `TESSDATA_SHA256`. The script refuses to download a
+   language that has no pinned digest. Verify the digest against the upstream tessdata_fast
+   release before you pin it.
+2. Run `npm run vendor:ocr`.
+3. Add the language to `OCR_LANGUAGES` in [`src/lib/ocrLanguages.ts`](./src/lib/ocrLanguages.ts)
+   so the UI offers it.
 
-- ❌ Hiçbir `fetch` / XHR / WebSocket / beacon dosyalarınızı, sayfa görüntülerinizi veya
-  metninizi taşımaz.
-- ❌ Hiçbir analitik veya telemetri SDK'sı yoktur.
-- ✅ Tüm motorlar (`pdf-lib`, `pdf.js`, `tesseract.js`) tarayıcıda çalışır.
-- ✅ OCR'ın WebAssembly çekirdeği **ve** dil verisi **kendi sunucumuzda barındırılır** — yani
-  OCR bile sıfır üçüncü taraf isteği yapar ve tamamen çevrimdışı çalışır.
-- ✅ Sonuçlar size yalnızca yerel bir indirme ile ulaşır.
-- ✅ Boyut sınırları cihazınızı korur: 200 MB'ı ya da 1.000 sayfayı aşan dosyalar (birleştirmede
-  toplamda 500 MB veya 2.000 sayfa) reddedilir; işlenemeyecek kadar büyük sayfalar da öyle.
-  Donmuş bir sekme yerine bir uyarı görürsünüz.
+The language model is downloaded once, to your machine. Your documents are never uploaded.
 
-Mimarinin tamamı ve bu ilkeyi koruyan kurallar için [`CLAUDE.md`](./CLAUDE.md) dosyasına
-bakın.
+[⬆ Back to top](#top)
 
-## 🧱 Teknolojiler
+---
 
-[React](https://react.dev) · [Vite](https://vite.dev) · [TypeScript](https://www.typescriptlang.org)
-· [Tailwind CSS v4](https://tailwindcss.com) · [pdf-lib](https://pdf-lib.js.org) ·
-[pdf.js](https://mozilla.github.io/pdf.js/) · [tesseract.js](https://tesseract.projectnaptha.com)
-· [@dnd-kit](https://dndkit.com) · [vite-plugin-pwa](https://vite-pwa-org.netlify.app) ·
-[Vitest](https://vitest.dev) + [Playwright](https://playwright.dev).
+### Contributing
 
-## 🚀 Başlangıç
+Issues and pull requests are welcome. Before you open a pull request, run `npm run lint` and
+`npm test`. If you change PDF processing or the UI, also run `npm run test:e2e`. The first
+end-to-end run needs `npx playwright install chromium`.
 
-**Node 18+** gerekir (Node 24 ile geliştirildi).
+Keep the privacy invariant intact: no feature may send user data off the device. A change to
+the Content Security Policy in `index.html` deserves the same scrutiny. The dev server removes
+that policy so React Refresh can run; the production build keeps it.
+
+Project layout:
+
+- `src/lib/`: framework-free PDF logic, with unit tests next to it
+- `src/tools/`: the tool registry and one folder per tool
+- `src/components/`: shared UI components
+- `src/pages/`: the home page and routed pages
+- `tests/e2e/`: Playwright tests
+
+To report a security issue, follow [SECURITY.md](./SECURITY.md). Do not open a public issue.
+
+[⬆ Back to top](#top)
+
+---
+
+### License
+
+[MIT](./LICENSE) © 𝓐.𝓒.𝓑
+
+[⬆ Back to top](#top)
+
+---
+
+<a id="turkce"></a>
+
+## Türkçe
+
+### Genel Bakış
+
+paperless-pdf, PDF'leri tarayıcınızda birleştirmenize, bölmenize, sıkıştırmanıza,
+dönüştürmenize, döndürmenize ve OCR ile aranabilir hale getirmenize yarar. Her işlem
+cihazınızda, JavaScript ve WebAssembly ile çalışır. Dosyalarınızı yükleyeceğiniz bir sunucu
+yoktur ve uygulamada analitik bulunmaz.
+
+Canlı sürümü **[iacbi.github.io/paperless-pdf](https://iacbi.github.io/paperless-pdf/)**
+adresinden deneyebilirsiniz.
+
+#### Gizlilik
+
+Hiçbir dosya cihazınızdan dışarı çıkmaz. PDF'leriniz, sayfa görüntüleriniz ve çıkarılan metin
+bellekte işlenir; sonuç yerel bir indirme olarak size geri gelir. Pratikte bu şu anlama gelir:
+
+- Dosyalarınızı, sayfa görüntülerinizi veya metninizi taşıyan hiçbir ağ isteği yapılmaz.
+- Analitik, telemetri veya üçüncü taraf SDK'sı yoktur.
+- PDF motorları (pdf-lib, pdf.js) ve OCR motoru (tesseract.js) tarayıcıda çalışır. OCR'ın
+  WebAssembly çekirdeği ve dil verisi uygulamanın kendi kaynağından sunulur; bu yüzden OCR
+  çevrimdışı çalışır ve üçüncü taraf isteği yapmaz.
+- Üretim derlemesi sıkı bir İçerik Güvenlik Politikası (CSP) ile gelir: `connect-src 'self'`,
+  `script-src 'self' 'wasm-unsafe-eval'` ve `object-src 'none'`. Betikler, worker'lar ve veriler
+  yalnızca uygulamanın kendi kaynağından yüklenebilir.
+- Boyut sınırları, çok büyük veya kötü niyetli dosyalara karşı cihazınızı korur. 200 MB'ı ya da
+  1.000 sayfayı aşan dosyalar reddedilir. Birleştirme oturumu toplamda 500 MB ve 2.000 sayfa
+  ile sınırlıdır. 50 MB'ı ya da 40 milyon pikseli aşan görseller ve çizilemeyecek kadar büyük
+  sayfalar reddedilir. Sekmenin donması yerine her araç sizi bilgilendiren bir mesaj gösterir.
+
+Proje React, Vite, TypeScript, Tailwind CSS, pdf-lib, pdf.js, tesseract.js ve dnd-kit ile
+geliştirildi.
+
+[⬆ Başa Dön](#top)
+
+---
+
+### Özellikler
+
+| Araç             | Ne yapar                                                                                                                                                         |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Birleştir**    | Birden çok PDF'i birleştirir. Sayfaları sürükleyerek yeniden sıralayabilir veya tek tek silebilirsiniz.                                                          |
+| **Böl**          | `1-3, 5, 8-` gibi sayfa aralıklarını tek bir PDF'e ya da ayrı dosyalardan oluşan bir ZIP'e çıkarır.                                                              |
+| **Sıkıştır**     | Sayfaları görüntü olarak yeniden işleyerek dosya boyutunu küçültür. DPI ve kaliteyi ayarlayabilirsiniz. Sayfalar görüntüye dönüştüğü için metin artık seçilemez. |
+| **Görsel → PDF** | JPG ve PNG görsellerini tek bir PDF'e çevirir. Sürükleyerek sırayı belirleyin, görseli sayfaya sığdırın ya da A4 veya Letter düzenini seçin.                     |
+| **PDF → PNG**    | Sayfaları seçtiğiniz çözünürlükte PNG olarak dışa aktarır; tek dosya ya da ZIP olarak.                                                                           |
+| **Döndür**       | Sayfaların tamamını ya da bir kısmını 90°'lik adımlarla döndürür. Sayfa küçük resimleri döndürdükçe güncellenir.                                                 |
+| **OCR**          | Taranmış sayfalara görünmez, aranabilir bir metin katmanı ekler. Cihazınızda çalışır ve çevrimdışı kullanılabilir.                                               |
+
+paperless-pdf bir Progressive Web App (PWA) olarak da çalışır. İlk açılıştan sonra bir service
+worker uygulamayı, OCR motorunu ve dil verisini önbelleğe alır; böylece tüm araçlar çevrimdışı
+çalışır. Tarayıcının kurulum isteminden uygulamayı ana ekranınıza veya masaüstünüze ekleyebilirsiniz.
+
+[⬆ Başa Dön](#top)
+
+---
+
+### Gereksinimler
+
+- Node.js 20 veya üzeri ve npm. CI ve dağıtım iş akışı Node 20 ile çalışır; proje Node 24
+  üzerinde geliştirildi.
+- WebAssembly ve Web Worker desteği olan güncel bir tarayıcı.
+
+[⬆ Başa Dön](#top)
+
+---
+
+### Kurulum
 
 ```bash
 git clone https://github.com/IACBI/paperless-pdf.git
@@ -241,74 +255,96 @@ npm install      # OCR varlıklarını da hazırlar (postinstall)
 npm run dev      # http://localhost:5173
 ```
 
-## 📜 Komutlar
+`npm install` bir postinstall betiği çalıştırır. Bu betik OCR worker'ını ve WebAssembly
+çekirdeğini `node_modules` içinden `public/` klasörüne kopyalar ve İngilizce dil verisini
+indirir. İndirilen dosya sabitlenmiş bir SHA-256 özetiyle doğrulanır. Yerelde indirme
+başarısız olursa kurulum uyarıyla tamamlanır, ancak `npm run vendor:ocr` komutunu çalıştırana
+kadar OCR kullanılamaz. CI'da aynı hata derlemeyi başarısız kılar.
 
-| Komut | Açıklama |
-| --- | --- |
-| `npm run dev` | Vite geliştirme sunucusunu başlat |
-| `npm run build` | Tip kontrolü yap ve `dist/` klasörüne derle |
-| `npm run preview` | Üretim derlemesini yerelde önizle |
-| `npm test` | Birim testlerini çalıştır (Vitest) |
-| `npm run test:e2e` | Uçtan uca testleri çalıştır (Playwright) |
-| `npm run lint` | ESLint ile denetle |
-| `npm run format` | Prettier ile biçimlendir |
-| `npm run vendor:ocr` | Kendi sunucuda barındırılan OCR varlıklarını (yeniden) hazırla |
+`public/tesseract/` ve `public/tessdata/` içindeki hazırlanan dosyalar git tarafından
+yoksayılır.
 
-## 🧪 Testler
+[⬆ Başa Dön](#top)
 
-- **Birim testleri (Vitest):** `src/lib/` içindeki saf PDF mantığı — birleştirme, bölme,
-  döndürme ve görsel→PDF — bellek içi PDF'lerle doğrulanır (fixture yok, ağ yok).
-- **Uçtan uca (Playwright):** gizlilik bildirimi, birleştirme turu ve çıktının gerçekten
-  seçilebilir metin içerdiğini doğrulayan bir **OCR turu** ve sınır aşan dosyaların
-  reddedilmesi için gerçek tarayıcı testleri.
+---
 
-## 📲 Çevrimdışı / PWA
+### Kullanım
 
-paperless-pdf bir Progressive Web App'tir. İlk yüklemeden sonra bir service worker uygulama
-kabuğunu **ve** OCR motoru ile dil verisini önbelleğe alır; böylece OCR dahil her araç
-tamamen çevrimdışı çalışır. Tarayıcının kurulum istemiyle ana ekranınıza ekleyebilirsiniz.
+| Komut                | Ne yapar                                                    |
+| -------------------- | ----------------------------------------------------------- |
+| `npm run dev`        | Vite geliştirme sunucusunu başlatır                         |
+| `npm run build`      | Tip kontrolü yapar ve `dist/` klasörüne derler              |
+| `npm run preview`    | Üretim derlemesini yerelde sunar                            |
+| `npm test`           | Birim testlerini çalıştırır (Vitest)                        |
+| `npm run test:e2e`   | Derler, sunar ve uçtan uca testleri çalıştırır (Playwright) |
+| `npm run lint`       | ESLint ile denetler                                         |
+| `npm run format`     | Depoyu Prettier ile biçimlendirir                           |
+| `npm run vendor:ocr` | OCR varlıklarını yeniden hazırlar                           |
 
-## 🔤 OCR varlıkları
+#### GitHub Pages'e dağıtım
 
-OCR, `public/` altında kendi sunucumuzda barındırılan Tesseract varlıklarıyla (worker, WASM
-çekirdeği, dil verisi) çalışır. Bunlar depoya **eklenmez**; `postinstall` ile otomatik veya
-elle hazırlanır:
-
-```bash
-npm run vendor:ocr
-```
-
-Yeni bir dil eklemek için kodunu [`scripts/vendor-tesseract.mjs`](./scripts/vendor-tesseract.mjs)
-içindeki `LANGS` listesine ve [`src/lib/ocrLanguages.ts`](./src/lib/ocrLanguages.ts) içindeki
-`OCR_LANGUAGES` listesine ekleyip betiği yeniden çalıştırın. (Ağ yalnızca açık kaynak dil
-modelini cihazınıza *indirmek* için kullanılır — belgeleriniz asla yüklenmez.)
-
-## 🌍 GitHub Pages'e dağıtım
-
-Uygulama göreli bir taban (`base: './'`) ve `HashRouter` kullanır; bu yüzden
-`https://iacbi.github.io/paperless-pdf/` gibi bir alt yolda ek ayar olmadan çalışır.
-
-**Önerilen — GitHub Actions (otomatik):**
+Uygulama göreli bir taban (`base: './'`) ve `HashRouter` kullanır. Bu sayede
+`https://iacbi.github.io/paperless-pdf/` gibi bir alt yolda ek bir ayar gerekmeden çalışır.
 
 1. Depoyu varsayılan dalı `main` olacak şekilde GitHub'a gönderin.
 2. **Settings → Pages** bölümünde **Source** olarak **GitHub Actions** seçin.
-3. `main`'e push yapın. [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml) iş
-   akışı `npm ci`, `npm test`, `npm run build` çalıştırır ve `dist/`'i yayınlar.
+3. `main` dalına push yapın. [Dağıtım iş akışı](./.github/workflows/deploy.yml) `npm ci`,
+   `npm test` ve `npm run build` komutlarını çalıştırır, ardından `dist/` klasörünü yayınlar.
 
-**Elle alternatif:**
+Başka bir barındırma servisi kullanacaksanız `npm run build` ile üretilen `dist/` klasörünü
+herhangi bir statik sunucuda yayınlamanız yeterlidir.
 
-```bash
-npm run vendor:ocr
-npm run build
-npx gh-pages -d dist
-```
+[⬆ Başa Dön](#top)
 
-## 🤝 Katkı
+---
 
-Hata bildirimleri ve PR'lar memnuniyetle karşılanır. PR açmadan önce `npm run lint` ve
-`npm test` çalıştırın. **Gizlilik ilkesini** koruyun — hiçbir özellik kullanıcı verisini
-dışarı göndermemelidir.
+### Yapılandırma
 
-## 📄 Lisans
+Varsayılan olarak yalnızca İngilizce OCR dili bulunur. Yeni bir dil eklemek için:
+
+1. Tesseract dil kodunu [`scripts/vendor-tesseract.mjs`](./scripts/vendor-tesseract.mjs)
+   içindeki `LANGS` listesine, `.traineddata.gz` dosyasının SHA-256 özetini ise
+   `TESSDATA_SHA256` tablosuna ekleyin. Betik, özeti sabitlenmemiş bir dili indirmez. Özeti
+   sabitlemeden önce upstream tessdata_fast sürümüyle karşılaştırın.
+2. `npm run vendor:ocr` komutunu çalıştırın.
+3. Dilin arayüzde görünmesi için [`src/lib/ocrLanguages.ts`](./src/lib/ocrLanguages.ts) içindeki
+   `OCR_LANGUAGES` listesine ekleyin.
+
+Dil modeli yalnızca bir kez, derleme yaptığınız makineye indirilir. Belgeleriniz hiçbir zaman
+yüklenmez.
+
+[⬆ Başa Dön](#top)
+
+---
+
+### Katkı
+
+Hata bildirimleri ve pull request'ler memnuniyetle karşılanır. Pull request açmadan önce
+`npm run lint` ve `npm test` komutlarını çalıştırın. PDF işleme veya arayüzde değişiklik
+yaptıysanız `npm run test:e2e` komutunu da çalıştırın. İlk uçtan uca test çalıştırmasından önce
+`npx playwright install chromium` gerekir.
+
+Gizlilik ilkesini koruyun: hiçbir özellik kullanıcı verisini cihazın dışına göndermemelidir.
+`index.html` içindeki CSP değişiklikleri de aynı titizlikle incelenmelidir. Geliştirme sunucusu,
+React Refresh çalışabilsin diye bu politikayı kaldırır; üretim derlemesi ise politikayı korur.
+
+Proje yapısı:
+
+- `src/lib/`: çerçeveden bağımsız PDF mantığı; birim testleri yanında yer alır
+- `src/tools/`: araç kayıt defteri ve her araç için bir klasör
+- `src/components/`: ortak arayüz bileşenleri
+- `src/pages/`: ana sayfa ve yönlendirilen sayfalar
+- `tests/e2e/`: Playwright testleri
+
+Bir güvenlik açığı bildirmek istiyorsanız [SECURITY.md](./SECURITY.md) dosyasındaki yönergeleri
+izleyin. Herkese açık bir issue açmayın.
+
+[⬆ Başa Dön](#top)
+
+---
+
+### Lisans
 
 [MIT](./LICENSE) © 𝓐.𝓒.𝓑
+
+[⬆ Başa Dön](#top)
