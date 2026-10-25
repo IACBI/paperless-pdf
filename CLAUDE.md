@@ -70,8 +70,11 @@ rendering there needs `OffscreenCanvas` plus a nested pdf.js worker, which is
 fragile across browsers. OCR is the exception: `tesseract.js` manages its own
 worker, so that heavy work is already off the main thread.
 
-Routing uses `HashRouter` (robust under any GitHub Pages base path). Vite `base`
-is `'./'` (relative) for the same reason.
+Routing uses `HashRouter` (robust under any GitHub Pages base path) from
+`react-router` v7 in library (declarative) mode, not framework mode. Vite `base`
+is `'./'` (relative) for the same reason. v7 wraps navigations in
+`startTransition`, so moving between tools keeps the current screen until the
+lazy chunk loads; the Suspense fallback shows only on a cold deep link.
 
 ## Resource limits
 
