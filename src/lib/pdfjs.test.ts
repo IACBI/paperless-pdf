@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { ResourceLimitError } from './limits';
 
 const { getDocument } = vi.hoisted(() => ({ getDocument: vi.fn() }));
@@ -11,9 +11,9 @@ const { loadPdf, renderPageToCanvas, renderPageToBlob, renderPageToDataUrl } = a
 );
 
 interface FakePage {
-  getViewport: ReturnType<typeof vi.fn>;
-  render: ReturnType<typeof vi.fn>;
-  cleanup: ReturnType<typeof vi.fn>;
+  getViewport: Mock;
+  render: Mock;
+  cleanup: Mock;
 }
 
 function fakePage(width = 100, height = 200): FakePage {

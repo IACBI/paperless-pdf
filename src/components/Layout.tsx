@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router';
 import { TOOLS } from '../tools/registry';
 import PrivacyBanner from './PrivacyBanner';
 
