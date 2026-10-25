@@ -11,6 +11,14 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    {
+      // The dev server injects an inline React Refresh preamble, which the CSP
+      // in index.html blocks. Production builds keep the policy.
+      name: 'dev-only-skip-csp-meta',
+      apply: 'serve',
+      transformIndexHtml: (html) =>
+        html.replace(/<meta\s+http-equiv="Content-Security-Policy"[\s\S]*?\/>/, ''),
+    },
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
