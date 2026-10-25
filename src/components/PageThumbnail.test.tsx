@@ -1,5 +1,5 @@
 import { act, cleanup, render, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import type { PDFDocumentProxy } from '../lib/pdfjs';
 
 const renderPageToBlob = vi.fn<(doc: unknown, page: number, scale: number) => Promise<Blob>>();
@@ -19,7 +19,7 @@ interface FakeObserver {
   callback: IOCallback;
   rootMargin: string;
   targets: Element[];
-  disconnect: ReturnType<typeof vi.fn>;
+  disconnect: Mock;
 }
 
 let observers: FakeObserver[] = [];
@@ -77,8 +77,8 @@ describe('PageThumbnail', () => {
   // jsdom does not implement object URLs, so they are stubbed on the real URL class.
   const originalCreate = URL.createObjectURL;
   const originalRevoke = URL.revokeObjectURL;
-  let revoke: ReturnType<typeof vi.fn>;
-  let create: ReturnType<typeof vi.fn>;
+  let revoke: Mock;
+  let create: Mock;
 
   beforeEach(() => {
     renderPageToBlob.mockReset();

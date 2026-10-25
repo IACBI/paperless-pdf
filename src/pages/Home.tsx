@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { TOOLS } from '../tools/registry';
 import ToolIcon from '../components/ToolIcon';
 
