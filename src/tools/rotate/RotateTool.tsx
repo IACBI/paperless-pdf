@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import FileDropzone from '../../components/FileDropzone';
 import Button from '../../components/Button';
 import Spinner from '../../components/Spinner';
 import ToolShell from '../../components/ToolShell';
-import { loadPdf, renderPageToDataUrl } from '../../lib/pdfjs';
+import { loadPdf, renderPageToDataUrl, type PDFDocumentProxy } from '../../lib/pdfjs';
+import { readPdfFile, userMessage } from '../../lib/limits';
 import { rotatePages, normalizeAngle } from '../../lib/rotate';
 import { downloadBlob, addSuffix } from '../../lib/download';
 
@@ -19,6 +20,18 @@ export default function RotateTool() {
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Bumped on unmount and on every new load, so an in-flight load that
+  // finishes late knows it has been superseded and must not touch state.
+  const disposed = useRef(false);
+  const generation = useRef(0);
+
+  useEffect(() => {
+    // StrictMode runs effects twice in development, so the flag is re-armed here.
+    disposed.current = false;
+    return () => {
+      disposed.current = true;
+    };
+  }, []);
 
   async function onFiles(files: File[]) {
     const file = files.find((f) => f.type === 'application/pdf' || /\.pdf$/i.test(f.name));
@@ -26,21 +39,29 @@ export default function RotateTool() {
       setError('Please choose a PDF file.');
       return;
     }
+    const current = ++generation.current;
+    const isCurrent = () => !disposed.current && generation.current === current;
     setError(null);
     setLoading(true);
     setDoc(null);
     setDeltas({});
+
+    let pdf: PDFDocumentProxy | null = null;
     try {
-      const bytes = new Uint8Array(await file.arrayBuffer());
-      const pdf = await loadPdf(bytes);
+      const bytes = await readPdfFile(file);
+      if (!isCurrent()) return;
+      pdf = await loadPdf(bytes);
+      if (!isCurrent()) return;
+      const loaded = pdf;
       const next: Loaded = {
         name: file.name,
         bytes,
-        thumbs: Array.from({ length: pdf.numPages }, () => undefined),
+        thumbs: Array.from({ length: loaded.numPages }, () => undefined),
       };
       setDoc(next);
-      for (let p = 0; p < pdf.numPages; p++) {
-        const thumb = await renderPageToDataUrl(pdf, p + 1, 0.4);
+      for (let p = 0; p < loaded.numPages; p++) {
+        const thumb = await renderPageToDataUrl(loaded, p + 1, 0.4);
+        if (!isCurrent()) return;
         setDoc((cur) => {
           if (!cur || cur.bytes !== bytes) return cur;
           const thumbs = cur.thumbs.slice();
@@ -48,11 +69,17 @@ export default function RotateTool() {
           return { ...cur, thumbs };
         });
       }
-      pdf.destroy();
-    } catch {
-      setError('Could not open that PDF. Is it valid and unencrypted?');
+    } catch (e) {
+      if (isCurrent()) {
+        // A partly rendered document is not usable: drop it so the dropzone returns.
+        setDoc(null);
+        setDeltas({});
+        setError(userMessage(e, 'Could not open that PDF. Is it valid and unencrypted?'));
+      }
     } finally {
-      setLoading(false);
+      // Every exit path releases this load's document, including superseded ones.
+      pdf?.destroy();
+      if (isCurrent()) setLoading(false);
     }
   }
 
