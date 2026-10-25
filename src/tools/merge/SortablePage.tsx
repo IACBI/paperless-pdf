@@ -1,5 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import PageThumbnail from '../../components/PageThumbnail';
+import type { PDFDocumentProxy } from '../../lib/pdfjs';
 
 export interface MergePage {
   /** Stable unique id for dnd. */
@@ -7,18 +9,18 @@ export interface MergePage {
   sourceIndex: number;
   pageIndex: number;
   sourceName: string;
-  /** Thumbnail data URL, or undefined while rendering. */
-  thumb?: string;
 }
 
 interface SortablePageProps {
   page: MergePage;
+  /** The loaded document this page belongs to; its thumbnail renders on demand. */
+  doc: PDFDocumentProxy;
   /** 1-based position shown to the user. */
   position: number;
   onDelete: (id: string) => void;
 }
 
-export default function SortablePage({ page, position, onDelete }: SortablePageProps) {
+export default function SortablePage({ page, doc, position, onDelete }: SortablePageProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: page.id,
   });
@@ -40,13 +42,12 @@ export default function SortablePage({ page, position, onDelete }: SortablePageP
         {...attributes}
         {...listeners}
       >
-        {page.thumb ? (
-          <img src={page.thumb} alt="" className="h-full w-full object-contain" draggable={false} />
-        ) : (
-          <span className="flex h-full items-center justify-center text-xs text-slate-400">
-            rendering…
-          </span>
-        )}
+        <PageThumbnail
+          doc={doc}
+          pageNumber={page.pageIndex + 1}
+          scale={0.4}
+          className="h-full w-full"
+        />
       </button>
 
       <div className="flex items-center justify-between gap-1 border-t border-slate-100 px-2 py-1 text-xs text-slate-500">

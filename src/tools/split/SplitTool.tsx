@@ -1,9 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import FileDropzone from '../../components/FileDropzone';
 import Button from '../../components/Button';
+import PageThumbnail from '../../components/PageThumbnail';
 import Spinner from '../../components/Spinner';
 import ToolShell from '../../components/ToolShell';
-import { loadPdf, renderPageToDataUrl } from '../../lib/pdfjs';
+import { loadPdf, type PDFDocumentProxy } from '../../lib/pdfjs';
+import { readPdfFile, userMessage } from '../../lib/limits';
 import {
   parseRanges,
   rangesToIndices,
@@ -18,7 +20,8 @@ interface Loaded {
   name: string;
   bytes: Uint8Array;
   pageCount: number;
-  thumbs: (string | undefined)[];
+  /** Kept open so thumbnails render on demand; destroyed when the file is dropped. */
+  pdf: PDFDocumentProxy;
 }
 
 export default function SplitTool() {
@@ -27,6 +30,25 @@ export default function SplitTool() {
   const [rangeText, setRangeText] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const pdfRef = useRef<PDFDocumentProxy | null>(null);
+  // Bumped on unmount and on every new load: a load that finishes after either
+  // must destroy its own document instead of adopting it.
+  const disposed = useRef(false);
+  const generation = useRef(0);
+
+  function releasePdf() {
+    pdfRef.current?.destroy();
+    pdfRef.current = null;
+  }
+
+  useEffect(() => {
+    // StrictMode runs effects twice in development, so the flag is re-armed here.
+    disposed.current = false;
+    return () => {
+      disposed.current = true;
+      releasePdf();
+    };
+  }, []);
 
   // Live-parse the range input against the loaded page count.
   const parsed = useMemo<
@@ -47,34 +69,27 @@ export default function SplitTool() {
       setError('Please choose a PDF file.');
       return;
     }
+    const current = ++generation.current;
+    const isCurrent = () => !disposed.current && generation.current === current;
     setError(null);
     setLoading(true);
+    releasePdf();
     setDoc(null);
     try {
-      const bytes = new Uint8Array(await file.arrayBuffer());
+      const bytes = await readPdfFile(file);
+      if (!isCurrent()) return;
       const pdf = await loadPdf(bytes);
-      const next: Loaded = {
-        name: file.name,
-        bytes,
-        pageCount: pdf.numPages,
-        thumbs: Array.from({ length: pdf.numPages }, () => undefined),
-      };
-      setDoc(next);
-      setRangeText(`1-${pdf.numPages}`);
-      for (let p = 0; p < pdf.numPages; p++) {
-        const thumb = await renderPageToDataUrl(pdf, p + 1, 0.35);
-        setDoc((cur) => {
-          if (!cur || cur.bytes !== bytes) return cur;
-          const thumbs = cur.thumbs.slice();
-          thumbs[p] = thumb;
-          return { ...cur, thumbs };
-        });
+      if (!isCurrent()) {
+        pdf.destroy();
+        return;
       }
-      pdf.destroy();
-    } catch {
-      setError('Could not open that PDF. Is it valid and unencrypted?');
+      pdfRef.current = pdf;
+      setDoc({ name: file.name, bytes, pageCount: pdf.numPages, pdf });
+      setRangeText(`1-${pdf.numPages}`);
+    } catch (e) {
+      if (isCurrent()) setError(userMessage(e, 'Could not open that PDF. Is it valid and unencrypted?'));
     } finally {
-      setLoading(false);
+      if (isCurrent()) setLoading(false);
     }
   }
 
@@ -148,6 +163,8 @@ export default function SplitTool() {
             <Button
               variant="ghost"
               onClick={() => {
+                generation.current++;
+                releasePdf();
                 setDoc(null);
                 setRangeText('');
                 setError(null);
@@ -197,7 +214,7 @@ export default function SplitTool() {
           </div>
 
           <ul className="grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8">
-            {doc.thumbs.map((thumb, i) => {
+            {Array.from({ length: doc.pageCount }, (_, i) => {
               const selected = parsed?.ok ? parsed.selected.has(i) : false;
               return (
                 <li
@@ -207,15 +224,12 @@ export default function SplitTool() {
                     selected ? 'border-brand-500 ring-2 ring-brand-300' : 'border-slate-200 opacity-50',
                   ].join(' ')}
                 >
-                  <div className="aspect-[3/4] bg-slate-50">
-                    {thumb ? (
-                      <img src={thumb} alt="" className="h-full w-full object-contain" />
-                    ) : (
-                      <span className="flex h-full items-center justify-center text-[10px] text-slate-400">
-                        …
-                      </span>
-                    )}
-                  </div>
+                  <PageThumbnail
+                    doc={doc.pdf}
+                    pageNumber={i + 1}
+                    scale={0.35}
+                    className="aspect-[3/4] bg-slate-50"
+                  />
                   <span className="block py-0.5 text-[11px] text-slate-500">{i + 1}</span>
                 </li>
               );
