@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Fully client-side, privacy-first PDF toolkit. No file ever leaves your browser.",
   "license": "MIT",
-  "author": "𝓐.𝓒.𝓑 <bozdogancanahmet@gmail.com>",
+  "author": "A.C.B <bozdogancanahmet@gmail.com>",
   "homepage": "https://iacbi.github.io/paperless-pdf/",
   "repository": {
     "type": "git",
