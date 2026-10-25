@@ -39,6 +39,7 @@ conflict instead of weakening the invariant.
 ```
 src/
   lib/          Pure, framework-free PDF logic. No React imports. Unit-tested.
+    limits.ts       Resource limits for untrusted input. See "Resource limits".
     pdfjs.ts        Configured pdf.js instance (local worker), render helpers.
     download.ts     Uint8Array/Blob -> browser download. The only "output" path.
     merge.ts        mergePdfs() via pdf-lib copyPages.
@@ -71,6 +72,52 @@ worker, so that heavy work is already off the main thread.
 
 Routing uses `HashRouter` (robust under any GitHub Pages base path). Vite `base`
 is `'./'` (relative) for the same reason.
+
+## Resource limits
+
+Input is untrusted and processed on the user's own device, so a hostile or huge
+file can exhaust memory or the canvas budget and freeze or crash the tab. All
+limits live in `src/lib/limits.ts` (MAX_INPUT_BYTES, MAX_PAGE_COUNT,
+MAX_TOTAL_*, MAX_RENDER_PIXELS, MAX_IMAGE_*) and throw `ResourceLimitError`,
+whose message is safe to show in the UI.
+
+- **Every rasterizing path must go through `renderPageToCanvas` in
+  `src/lib/pdfjs.ts`**, which calls `assertRenderSize` before allocating. Do not
+  create a canvas for a PDF page any other way.
+- **Thumbnails go through `PageThumbnail` / `usePageThumbnail`**, which render
+  lazily when scrolled into view and share one concurrency-limited queue. Do not
+  render a page thumbnail directly in a component.
+- **Every PDF load is guarded.** `loadPdf` in `pdfjs.ts` checks bytes and pages
+  for pdf.js. The `lib/` pdf-lib helpers (`merge.ts`, `rotate.ts`, `split.ts`)
+  call `assertInputSize` before `PDFDocument.load` and `assertPageCount` after,
+  and merge also enforces the cumulative totals. Use `readPdfFile` in the tool
+  views for the file-size check before reading bytes.
+- **Images → PDF** (`imagesToPdf.ts`, `ImagesToPdfTool.tsx`) caps per-image bytes,
+  image count, cumulative bytes, and embedded pixel dimensions.
+- Check limits before allocation, not after. Show `userMessage(err, fallback)`
+  in the UI so limit errors read clearly.
+- Regression tests: `src/lib/limits.test.ts` and `tests/e2e/limits.spec.ts`.
+
+## Content Security Policy and same-origin assets
+
+`index.html` sets a CSP via a `<meta http-equiv>` tag: `default-src 'self'`,
+`connect-src 'self'`, `script-src 'self' 'wasm-unsafe-eval'`,
+`worker-src 'self' blob:`, `object-src 'none'`, `form-action 'none'`. The app
+must work without `'unsafe-eval'`, which is why `loadPdf` sets
+`isEvalSupported: false`.
+
+New asset types (fonts, workers, wasm, language data) must stay same-origin under
+`public/` or be bundled by Vite. Do not add a CDN origin to the CSP. If a new asset
+truly needs one, that is a privacy-invariant decision to surface, not a quiet
+CSP edit.
+
+## Vendored OCR assets and pinned digests
+
+`scripts/vendor-tesseract.mjs` downloads `eng.traineddata.gz` from an external
+host and verifies it against a pinned SHA-256 (`TESSDATA_SHA256`) before it is
+written into `public/tessdata/`. That digest is the trust anchor, so when you change
+the traineddata file, recompute the SHA-256 from the new file and update the pin in
+the same change. Never disable the check to make a download pass.
 
 ## Library responsibilities & verified APIs
 
@@ -128,6 +175,8 @@ the offline guarantee and the privacy invariant.
   (`src/lib/split.test.ts`) logic. Tests build synthetic PDFs in-memory with
   `pdf-lib` — no fixtures needed and no network.
 - Prefer testing `src/lib/` pure functions over UI.
+- End-to-end: `npm run test:e2e` (Playwright, Chromium) runs against a production
+  build. Test PDFs are generated in memory with `pdf-lib`.
 
 ## Conventions
 

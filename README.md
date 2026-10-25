@@ -49,6 +49,9 @@ This isn't just a claim — it's enforced in code:
 - ✅ OCR's WebAssembly core **and** language data are **self-hosted** — so even OCR makes
   zero third-party requests and works completely offline.
 - ✅ Results reach you only through a local download.
+- ✅ Size limits protect your device: files over 200 MB or 1,000 pages (and merges over
+  500 MB or 2,000 pages in total) are refused, and so is any page too large to render.
+  You get a message instead of a frozen tab.
 
 See [`CLAUDE.md`](./CLAUDE.md) for the full architecture and the rules that protect this
 invariant.
@@ -93,8 +96,8 @@ npm run dev      # http://localhost:5173
 - **Unit tests (Vitest):** the pure PDF logic in `src/lib/` — merge, split, rotate and
   images→PDF — verified with in-memory PDFs (no fixtures, no network).
 - **End-to-end (Playwright):** real-browser smoke tests covering the privacy banner, a
-  merge round-trip, and an **OCR round-trip** that confirms the output PDF actually
-  contains selectable text.
+  merge round-trip, an **OCR round-trip** that confirms the output PDF actually
+  contains selectable text, and refusals for over-limit input.
 
 ```bash
 npm test          # unit
@@ -212,6 +215,9 @@ Bu yalnızca bir iddia değil, kodla güvence altına alınmıştır:
 - ✅ OCR'ın WebAssembly çekirdeği **ve** dil verisi **kendi sunucumuzda barındırılır** — yani
   OCR bile sıfır üçüncü taraf isteği yapar ve tamamen çevrimdışı çalışır.
 - ✅ Sonuçlar size yalnızca yerel bir indirme ile ulaşır.
+- ✅ Boyut sınırları cihazınızı korur: 200 MB'ı ya da 1.000 sayfayı aşan dosyalar (birleştirmede
+  toplamda 500 MB veya 2.000 sayfa) reddedilir; işlenemeyecek kadar büyük sayfalar da öyle.
+  Donmuş bir sekme yerine bir uyarı görürsünüz.
 
 Mimarinin tamamı ve bu ilkeyi koruyan kurallar için [`CLAUDE.md`](./CLAUDE.md) dosyasına
 bakın.
@@ -253,7 +259,8 @@ npm run dev      # http://localhost:5173
 - **Birim testleri (Vitest):** `src/lib/` içindeki saf PDF mantığı — birleştirme, bölme,
   döndürme ve görsel→PDF — bellek içi PDF'lerle doğrulanır (fixture yok, ağ yok).
 - **Uçtan uca (Playwright):** gizlilik bildirimi, birleştirme turu ve çıktının gerçekten
-  seçilebilir metin içerdiğini doğrulayan bir **OCR turu** için gerçek tarayıcı testleri.
+  seçilebilir metin içerdiğini doğrulayan bir **OCR turu** ve sınır aşan dosyaların
+  reddedilmesi için gerçek tarayıcı testleri.
 
 ## 📲 Çevrimdışı / PWA
 
