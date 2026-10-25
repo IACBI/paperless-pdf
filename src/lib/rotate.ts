@@ -1,4 +1,5 @@
 import { PDFDocument, degrees } from 'pdf-lib';
+import { assertInputSize, assertPageCount } from './limits';
 
 /** Normalize any degree value to one of 0/90/180/270. */
 export function normalizeAngle(deg: number): number {
@@ -14,7 +15,9 @@ export async function rotatePages(
   bytes: Uint8Array,
   deltaByIndex: Map<number, number>,
 ): Promise<Uint8Array> {
+  assertInputSize(bytes.byteLength);
   const doc = await PDFDocument.load(bytes);
+  assertPageCount(doc.getPageCount());
   const pages = doc.getPages();
 
   for (const [index, delta] of deltaByIndex) {
@@ -29,7 +32,9 @@ export async function rotatePages(
 
 /** Rotate every page by the same delta. Convenience wrapper. */
 export async function rotateAll(bytes: Uint8Array, delta: number): Promise<Uint8Array> {
+  assertInputSize(bytes.byteLength);
   const doc = await PDFDocument.load(bytes);
+  assertPageCount(doc.getPageCount());
   for (const page of doc.getPages()) {
     page.setRotation(degrees(normalizeAngle(page.getRotation().angle + delta)));
   }

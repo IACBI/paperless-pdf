@@ -7,6 +7,7 @@ import {
   extractPages,
   type PageRange,
 } from './split';
+import { MAX_INPUT_BYTES, MAX_PAGE_COUNT, ResourceLimitError } from './limits';
 
 async function makePdf(n: number): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
@@ -94,3 +95,23 @@ describe('extractPages', () => {
     expect(await pageCount(out)).toBe(4);
   });
 });
+
+describe('split resource limits', () => {
+  it('rejects oversized input before parsing it', async () => {
+    const pdf = withByteLength(await makePdf(1), MAX_INPUT_BYTES + 1);
+    await expect(splitByRanges(pdf, [{ start: 1, end: 1 }])).rejects.toBeInstanceOf(ResourceLimitError);
+    await expect(extractPages(pdf, [{ start: 1, end: 1 }])).rejects.toBeInstanceOf(ResourceLimitError);
+  });
+
+  it('rejects documents over the page limit', async () => {
+    const pdf = await makePdf(MAX_PAGE_COUNT + 1);
+    await expect(splitByRanges(pdf, [{ start: 1, end: 1 }])).rejects.toBeInstanceOf(ResourceLimitError);
+    await expect(extractPages(pdf, [{ start: 1, end: 1 }])).rejects.toBeInstanceOf(ResourceLimitError);
+  });
+});
+
+/** Same bytes, but reporting a declared length. The limit check runs before parsing. */
+function withByteLength(bytes: Uint8Array, length: number): Uint8Array {
+  Object.defineProperty(bytes, 'byteLength', { value: length });
+  return bytes;
+}

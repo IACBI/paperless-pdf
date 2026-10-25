@@ -3,6 +3,7 @@ import FileDropzone from '../../components/FileDropzone';
 import Button from '../../components/Button';
 import Spinner from '../../components/Spinner';
 import ToolShell from '../../components/ToolShell';
+import { readPdfFile, userMessage } from '../../lib/limits';
 import { compressPdf } from '../../lib/compress';
 import { downloadBlob, addSuffix } from '../../lib/download';
 
@@ -40,7 +41,11 @@ export default function CompressTool() {
     }
     setError(null);
     setResult(null);
-    setDoc({ name: file.name, bytes: new Uint8Array(await file.arrayBuffer()) });
+    try {
+      setDoc({ name: file.name, bytes: await readPdfFile(file) });
+    } catch (e) {
+      setError(userMessage(e, 'Could not read that PDF.'));
+    }
   }
 
   async function handleCompress() {

@@ -1,4 +1,5 @@
 import { PDFDocument } from 'pdf-lib';
+import { assertInputSize, assertPageCount } from './limits';
 
 /** An inclusive 1-based page range. */
 export interface PageRange {
@@ -90,8 +91,10 @@ export async function splitByRanges(
 ): Promise<Uint8Array[]> {
   if (ranges.length === 0) throw new Error('splitByRanges: no ranges provided');
 
+  assertInputSize(bytes.byteLength);
   const src = await PDFDocument.load(bytes);
   const pageCount = src.getPageCount();
+  assertPageCount(pageCount);
 
   const outputs: Uint8Array[] = [];
   for (const { start, end } of ranges) {
@@ -115,7 +118,9 @@ export async function extractPages(
   bytes: Uint8Array,
   ranges: PageRange[],
 ): Promise<Uint8Array> {
+  assertInputSize(bytes.byteLength);
   const src = await PDFDocument.load(bytes);
+  assertPageCount(src.getPageCount());
   const indices = rangesToIndices(ranges).filter((i) => i < src.getPageCount());
   if (indices.length === 0) throw new Error('No pages selected.');
   const out = await PDFDocument.create();

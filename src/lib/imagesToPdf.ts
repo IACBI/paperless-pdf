@@ -1,4 +1,10 @@
 import { PDFDocument, type PDFImage } from 'pdf-lib';
+import {
+  assertCumulativeInputSize,
+  assertImageCount,
+  assertImagePixels,
+  assertImageSize,
+} from './limits';
 
 export type ImageFormat = 'jpg' | 'png';
 
@@ -34,6 +40,19 @@ export function detectFormat(bytes: Uint8Array): ImageFormat | null {
 }
 
 /**
+ * Width/height from a PNG's IHDR chunk, or null if the header is malformed.
+ * Read before embedding because pdf-lib's embedPng decodes the full bitmap.
+ */
+export function pngDimensions(bytes: Uint8Array): { width: number; height: number } | null {
+  if (bytes.byteLength < 24) return null;
+  const isIhdr =
+    bytes[12] === 0x49 && bytes[13] === 0x48 && bytes[14] === 0x44 && bytes[15] === 0x52;
+  if (!isIhdr) return null;
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  return { width: view.getUint32(16), height: view.getUint32(20) };
+}
+
+/**
  * Build a PDF from a list of JPG/PNG images, one image per page. Pure; runs
  * entirely in-browser via pdf-lib.
  */
@@ -42,17 +61,33 @@ export async function imagesToPdf(
   options: ImagesToPdfOptions = {},
 ): Promise<Uint8Array> {
   if (images.length === 0) throw new Error('imagesToPdf: no images provided');
+  assertImageCount(images.length);
   const { layout = 'fit', margin = 36 } = options;
 
   const doc = await PDFDocument.create();
+  let totalBytes = 0;
 
   for (const img of images) {
+    assertImageSize(img.bytes.byteLength);
+    assertCumulativeInputSize(totalBytes, img.bytes.byteLength);
+    totalBytes += img.bytes.byteLength;
+
+    if (img.format === 'png') {
+      const dims = pngDimensions(img.bytes);
+      if (!dims) throw new Error(`Could not embed image${img.name ? ` "${img.name}"` : ''}.`);
+      assertImagePixels(dims.width, dims.height);
+    }
+
     let embedded: PDFImage;
     try {
-      embedded = img.format === 'jpg' ? await doc.embedJpg(img.bytes) : await doc.embedPng(img.bytes);
+      embedded =
+        img.format === 'jpg' ? await doc.embedJpg(img.bytes) : await doc.embedPng(img.bytes);
     } catch {
       throw new Error(`Could not embed image${img.name ? ` "${img.name}"` : ''}.`);
     }
+    // embedJpg only parses the header, so JPEG dimensions are checked here; PNG
+    // was checked above, before decoding.
+    assertImagePixels(embedded.width, embedded.height);
 
     if (layout === 'fit') {
       const page = doc.addPage([embedded.width, embedded.height]);
