@@ -4,6 +4,7 @@ import Button from '../../components/Button';
 import Spinner from '../../components/Spinner';
 import ToolShell from '../../components/ToolShell';
 import { loadPdf } from '../../lib/pdfjs';
+import { readPdfFile, userMessage } from '../../lib/limits';
 import { parseRanges, rangesToIndices, type PageRange } from '../../lib/split';
 import { pdfPagesToPng } from '../../lib/pdfToPng';
 import { downloadBlob, swapExt } from '../../lib/download';
@@ -52,13 +53,13 @@ export default function PdfToPngTool() {
     setLoading(true);
     setDoc(null);
     try {
-      const bytes = new Uint8Array(await file.arrayBuffer());
+      const bytes = await readPdfFile(file);
       const pdf = await loadPdf(bytes);
       setDoc({ name: file.name, bytes, pageCount: pdf.numPages });
       setRangeText(`1-${pdf.numPages}`);
       pdf.destroy();
-    } catch {
-      setError('Could not open that PDF. Is it valid and unencrypted?');
+    } catch (e) {
+      setError(userMessage(e, 'Could not open that PDF. Is it valid and unencrypted?'));
     } finally {
       setLoading(false);
     }

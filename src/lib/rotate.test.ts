@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PDFDocument, degrees } from 'pdf-lib';
 import { normalizeAngle, rotatePages, rotateAll } from './rotate';
+import { MAX_INPUT_BYTES, MAX_PAGE_COUNT, ResourceLimitError } from './limits';
 
 async function makePdf(n: number, initialRotation = 0): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
@@ -53,3 +54,23 @@ describe('rotateAll', () => {
     expect(await anglesOf(out)).toEqual([90, 90, 90]);
   });
 });
+
+describe('rotate resource limits', () => {
+  it('rejects oversized input before parsing it', async () => {
+    const pdf = withByteLength(await makePdf(1), MAX_INPUT_BYTES + 1);
+    await expect(rotatePages(pdf, new Map())).rejects.toBeInstanceOf(ResourceLimitError);
+    await expect(rotateAll(pdf, 90)).rejects.toBeInstanceOf(ResourceLimitError);
+  });
+
+  it('rejects documents over the page limit', async () => {
+    const pdf = await makePdf(MAX_PAGE_COUNT + 1);
+    await expect(rotatePages(pdf, new Map())).rejects.toBeInstanceOf(ResourceLimitError);
+    await expect(rotateAll(pdf, 90)).rejects.toBeInstanceOf(ResourceLimitError);
+  });
+});
+
+/** Same bytes, but reporting a declared length. The limit check runs before parsing. */
+function withByteLength(bytes: Uint8Array, length: number): Uint8Array {
+  Object.defineProperty(bytes, 'byteLength', { value: length });
+  return bytes;
+}

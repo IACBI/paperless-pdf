@@ -4,6 +4,7 @@ import Button from '../../components/Button';
 import Spinner from '../../components/Spinner';
 import ToolShell from '../../components/ToolShell';
 import { loadPdf } from '../../lib/pdfjs';
+import { readPdfFile, userMessage } from '../../lib/limits';
 import { ocrToSearchablePdf, type OcrProgress } from '../../lib/ocr';
 import { OCR_LANGUAGES } from '../../lib/ocrLanguages';
 import { downloadBlob, addSuffix } from '../../lib/download';
@@ -32,12 +33,12 @@ export default function OcrTool() {
     setLoading(true);
     setDoc(null);
     try {
-      const bytes = new Uint8Array(await file.arrayBuffer());
+      const bytes = await readPdfFile(file);
       const pdf = await loadPdf(bytes);
       setDoc({ name: file.name, bytes, pageCount: pdf.numPages });
       pdf.destroy();
-    } catch {
-      setError('Could not open that PDF. Is it valid and unencrypted?');
+    } catch (e) {
+      setError(userMessage(e, 'Could not open that PDF. Is it valid and unencrypted?'));
     } finally {
       setLoading(false);
     }

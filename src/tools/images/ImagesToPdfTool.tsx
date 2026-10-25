@@ -21,6 +21,12 @@ import Button from '../../components/Button';
 import Spinner from '../../components/Spinner';
 import ToolShell from '../../components/ToolShell';
 import { imagesToPdf, detectFormat, type ImageInput, type PageLayout } from '../../lib/imagesToPdf';
+import {
+  assertCumulativeInputSize,
+  assertImageCount,
+  assertImageSize,
+  userMessage,
+} from '../../lib/limits';
 import { downloadBlob } from '../../lib/download';
 
 interface ImageItem {
@@ -85,20 +91,31 @@ export default function ImagesToPdfTool() {
   async function onFiles(files: File[]) {
     setError(null);
     const next: ImageItem[] = [];
-    for (const file of files) {
-      const bytes = new Uint8Array(await file.arrayBuffer());
-      const format = detectFormat(bytes);
-      if (!format) {
-        setError(`"${file.name}" is not a supported image (use JPG or PNG).`);
-        continue;
+    let totalBytes = items.reduce((sum, i) => sum + i.bytes.byteLength, 0);
+    try {
+      for (const file of files) {
+        // Refuse by declared size before reading the file into memory.
+        assertImageSize(file.size);
+        assertCumulativeInputSize(totalBytes, file.size);
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        const format = detectFormat(bytes);
+        if (!format) {
+          setError(`"${file.name}" is not a supported image (use JPG or PNG).`);
+          continue;
+        }
+        assertImageCount(items.length + next.length + 1);
+        totalBytes += bytes.byteLength;
+        next.push({
+          id: `img-${idCounter.current++}`,
+          name: file.name,
+          bytes,
+          format,
+          url: URL.createObjectURL(new Blob([bytes as BlobPart])),
+        });
       }
-      next.push({
-        id: `img-${idCounter.current++}`,
-        name: file.name,
-        bytes,
-        format,
-        url: URL.createObjectURL(new Blob([bytes as BlobPart])),
-      });
+    } catch (e) {
+      // Keep the images accepted before the limit was hit; the rest are not added.
+      setError(userMessage(e, 'Could not read one of the images.'));
     }
     setItems((prev) => [...prev, ...next]);
   }
@@ -140,7 +157,7 @@ export default function ImagesToPdfTool() {
       const bytes = await imagesToPdf(inputs, { layout });
       downloadBlob(bytes, 'images.pdf');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Conversion failed.');
+      setError(userMessage(e, e instanceof Error ? e.message : 'Conversion failed.'));
     } finally {
       setBusy(false);
     }

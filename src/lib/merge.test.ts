@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
 import { mergePdfs, type PageRef } from './merge';
+import { MAX_INPUT_BYTES, MAX_PAGE_COUNT, ResourceLimitError } from './limits';
 
 /** Build an in-memory PDF with `n` blank pages (no fixtures, no network). */
 async function makePdf(n: number): Promise<Uint8Array> {
@@ -78,3 +79,28 @@ describe('mergePdfs', () => {
     ).rejects.toThrow(/invalid sourceIndex/i);
   });
 });
+
+describe('mergePdfs resource limits', () => {
+  it('rejects a source over the byte limit before parsing it', async () => {
+    const a = withByteLength(await makePdf(1), MAX_INPUT_BYTES + 1);
+    await expect(mergePdfs([a])).rejects.toBeInstanceOf(ResourceLimitError);
+  });
+
+  it('rejects a single source with too many pages', async () => {
+    const a = await makePdf(MAX_PAGE_COUNT + 1);
+    await expect(mergePdfs([a])).rejects.toBeInstanceOf(ResourceLimitError);
+  });
+
+  it('rejects sources that together exceed the page limit', async () => {
+    const a = await makePdf(MAX_PAGE_COUNT);
+    const b = await makePdf(MAX_PAGE_COUNT);
+    const c = await makePdf(1);
+    await expect(mergePdfs([a, b, c])).rejects.toBeInstanceOf(ResourceLimitError);
+  });
+});
+
+/** Same bytes, but reporting a declared length. The limit check runs before parsing. */
+function withByteLength(bytes: Uint8Array, length: number): Uint8Array {
+  Object.defineProperty(bytes, 'byteLength', { value: length });
+  return bytes;
+}

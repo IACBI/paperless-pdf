@@ -1,4 +1,10 @@
 import { PDFDocument } from 'pdf-lib';
+import {
+  assertCumulativeInputSize,
+  assertCumulativePageCount,
+  assertInputSize,
+  assertPageCount,
+} from './limits';
 
 /** A single page selected from a source document, used to build the merge order. */
 export interface PageRef {
@@ -27,9 +33,22 @@ export async function mergePdfs(
     throw new Error('mergePdfs: at least one source PDF is required');
   }
 
-  const loaded = await Promise.all(
-    sources.map((bytes) => PDFDocument.load(bytes)),
-  );
+  // Sequential on purpose: each source is checked against the running totals
+  // before the next one is parsed, so an oversized batch is refused early.
+  const loaded: PDFDocument[] = [];
+  let totalBytes = 0;
+  let totalPages = 0;
+  for (const bytes of sources) {
+    assertInputSize(bytes.byteLength);
+    assertCumulativeInputSize(totalBytes, bytes.byteLength);
+    const doc = await PDFDocument.load(bytes);
+    const pageCount = doc.getPageCount();
+    assertPageCount(pageCount);
+    assertCumulativePageCount(totalPages, pageCount);
+    totalBytes += bytes.byteLength;
+    totalPages += pageCount;
+    loaded.push(doc);
+  }
 
   const pages: PageRef[] =
     order ??
