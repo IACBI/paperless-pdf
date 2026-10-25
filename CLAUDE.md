@@ -51,7 +51,7 @@ src/
     ocr.ts          Per-page OCR -> searchable PDF, self-hosted assets.
   workers/      Web Workers for heavy ops (compress, OCR) with progress messages.
   components/   Reusable UI (dropzone, page grid w/ dnd, progress, privacy banner…).
-  tools/        registry.tsx (source of truth for features) + per-tool views.
+  tools/        registry.ts (source of truth for features) + per-tool views.
   pages/        Home and the routed tool pages.
 public/
   tesseract/    Self-hosted tesseract worker.min.js + tesseract-core wasm.
@@ -158,7 +158,7 @@ manifest live in `public/` (`icon.svg`, `favicon.svg`).
 
 ## How to add a new tool
 
-1. Add an entry to `src/tools/registry.tsx` (id, path, title, blurb, icon, status).
+1. Add an entry to `src/tools/registry.ts` (id, path, title, blurb, icon, status).
 2. Implement the core logic as a pure function in `src/lib/<tool>.ts`. Keep it
    DOM-free where possible and unit-test it.
 3. Build the page/view under `src/tools/` (or `src/pages/`) and wire its route in
@@ -167,9 +167,13 @@ manifest live in `public/` (`icon.svg`, `favicon.svg`).
 
 ## How to add an OCR language
 
-Drop the `<lang>.traineddata` file into `public/tessdata/` and register it in the
-language picker. Do **not** fetch traineddata from a remote CDN — that would break
-the offline guarantee and the privacy invariant.
+1. Add its code to `LANGS` in `scripts/vendor-tesseract.mjs`, run
+   `npm run vendor:ocr`, and pin the new file's SHA-256 in `TESSDATA_SHA256`.
+2. Add an entry to `OCR_LANGUAGES` in `src/lib/ocrLanguages.ts`.
+
+The file is vendored into `public/tessdata/` at build time. Do **not** fetch
+traineddata from a remote CDN at runtime — that would break the offline guarantee
+and the privacy invariant.
 
 ## Testing
 
