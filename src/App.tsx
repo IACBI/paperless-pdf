@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import ToolPlaceholder from './pages/ToolPlaceholder';
@@ -87,6 +87,8 @@ export default function App() {
         />
         {/* Unknown tool path → friendly not-found. */}
         <Route path=":tool" element={<ToolPlaceholder />} />
+        {/* Deeper unknown paths would otherwise render an empty layout. */}
+        <Route path="*" element={<ToolPlaceholder />} />
       </Route>
     </Routes>
   );
